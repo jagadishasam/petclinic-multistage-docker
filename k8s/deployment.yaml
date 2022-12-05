@@ -1,0 +1,56 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: petclinic-k8s-mysql
+  labels:
+    name: petclinic-k8s-mysql
+spec:
+  ports:
+    - port: 80      
+      targetPort: 8080  
+      protocol: TCP
+  selector:           
+    app: petclinic-k8s-mysql
+  type: LoadBalancer       
+
+---
+apiVersion: apps/v1 
+kind: Deployment    
+metadata:              
+  name: petclinic-k8s-mysql
+spec:                
+  selector:         
+    matchLabels:
+      app: petclinic-k8s-mysql
+  replicas: 3        
+  template:
+    metadata:
+      labels:        
+        app: petclinic-k8s-mysql
+    spec:
+      containers:
+        - name: petclinic-k8s-mysql
+          image: 028059/petclinic:latest 
+          ports:
+            - containerPort: 8080                
+          env:   # Setting Enviornmental Variables
+          - name: DB_HOST   # Setting Database host address from configMap
+            valueFrom: 
+              configMapKeyRef:
+                name: db-conf  # name of configMap
+                key: host
+          - name: DB_NAME  # Setting Database name from configMap
+            valueFrom:
+              configMapKeyRef:
+                name: db-conf 
+                key: name
+          - name: DB_USERNAME  # Setting Database username from Secret
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials # Secret Name
+                key: username
+          - name: DB_PASSWORD # Setting Database password from Secret
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: password   
